@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connector detail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --aira-bg-default:#FFFFFF;--aira-bg-subtle:#FBFCFD;--aira-bg-muted:#EEF1F4;--aira-bg-canvas:#F6F8FA;
+    --aira-rail:#0A0F1A;--aira-rail-icon:#8A94A6;
+    --aira-text-primary:#111827;--aira-text-secondary:#364152;--aira-text-tertiary:#6B7785;--aira-text-placeholder:#9AA4B2;
+    --aira-border-subtle:#EEF1F4;--aira-border-default:#E2E6EB;--aira-border-strong:#C9D0D9;
+    --aira-indigo-600:#3438C9;--aira-indigo-50:#EEF0FF;--aira-indigo-100:#DDE0FF;
+    --aira-green-500:#1F7A42;--aira-green-bg:#E7F3EC;
+    --r-sm:6px;--r-md:8px;--r-lg:12px;--r-pill:999px;
+    --sh-sm:0 1px 2px rgba(16,24,40,.05);--sh-md:0 8px 24px rgba(16,24,40,.12);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  [hidden]{display:none !important}
+  body{font-family:"Roboto",system-ui,sans-serif;color:var(--aira-text-primary);background:var(--aira-bg-canvas);font-size:14px;line-height:20px;-webkit-font-smoothing:antialiased}
+  .app{display:flex;height:100vh;overflow:hidden}
+
+  body.mode-user .admin-only{display:none !important}
+  body.mode-admin .user-only{display:none !important}
+  .connector{display:none}
+  .connector.active{display:block}
+
+  .rail{width:56px;flex:0 0 56px;background:var(--aira-rail);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:6px}
+  .rail .logo{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+  .rail .ic{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--aira-rail-icon)}
+  .rail .ic.active{background:rgba(255,255,255,.08);color:#fff}
+  .rail .sp{flex:1}
+  .rail svg{width:19px;height:19px;stroke-width:1.6}
+
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--aira-bg-default);position:relative}
+  .topbar{height:56px;flex:0 0 56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--aira-border-subtle)}
+  .org{display:flex;align-items:center;gap:7px;font-weight:600;font-size:14px}
+  .org svg{width:16px;height:16px;color:var(--aira-text-tertiary)}
+  .topright{display:flex;align-items:center;gap:12px}
+  .sessions{display:flex;align-items:center;gap:7px;border:1px solid var(--aira-border-default);background:var(--aira-bg-default);border-radius:var(--r-md);padding:7px 12px;font-size:13px;font-weight:500;color:var(--aira-text-secondary)}
+  .sessions svg{width:15px;height:15px}
+  .avatar{width:30px;height:30px;border-radius:50%;background:var(--aira-bg-muted);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--aira-text-secondary)}
+
+  .settings-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid var(--aira-border-subtle)}
+  .settings-head h1{margin:0;font-size:22px;line-height:30px;font-weight:600}
+  .xclose{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--aira-text-tertiary);border:0;background:transparent;cursor:pointer}
+  .xclose:hover{background:var(--aira-bg-muted)}
+
+  .settings-body{flex:1;display:flex;min-height:0}
+  .subnav{width:236px;flex:0 0 236px;border-right:1px solid var(--aira-border-subtle);padding:16px 12px;overflow:auto}
+  .subnav a{display:block;padding:9px 12px;border-radius:var(--r-md);color:var(--aira-text-secondary);font-size:14px;text-decoration:none;margin-bottom:2px}
+  .subnav a:hover{background:var(--aira-bg-subtle)}
+  .subnav a.active{background:var(--aira-indigo-50);color:var(--aira-indigo-600);font-weight:500}
+
+  .content{flex:1;overflow:auto;padding:24px 40px 72px}
+  .content-inner{max-width:1120px;margin:0 auto}
+
+  .toprow{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:16px;flex-wrap:wrap}
+  .leftnav{display:flex;align-items:center;gap:14px}
+  .back{display:inline-flex;align-items:center;gap:6px;color:var(--aira-text-secondary);font-size:14px;text-decoration:none}
+  .back svg{width:16px;height:16px}
+  .back:hover{color:var(--aira-text-primary)}
+  .mode{display:flex;align-items:center;gap:10px}
+  .seg{display:inline-flex;background:var(--aira-bg-muted);border-radius:var(--r-md);padding:3px}
+  .seg button{border:0;background:transparent;font:inherit;font-size:13px;padding:5px 14px;border-radius:6px;color:var(--aira-text-tertiary);cursor:pointer}
+  .seg button.on{background:var(--aira-bg-default);color:var(--aira-text-primary);font-weight:500;box-shadow:var(--sh-sm)}
+  .connseg button{font-weight:500}
+  .mode-pill{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--aira-text-tertiary)}
+  .mode-pill.admin{color:var(--aira-indigo-600)}
+  .dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+
+  .p-head{background:var(--aira-bg-subtle);border:1px solid var(--aira-border-subtle);border-radius:var(--r-md);padding:22px 24px;margin-bottom:12px}
+  .idhead{display:flex;gap:16px;align-items:flex-start}
+  .logo-tile{width:52px;height:52px;flex:0 0 52px;border-radius:var(--r-md);background:#E7EFEC;display:flex;align-items:center;justify-content:center}
+  .logo-tile svg{width:28px;height:28px;color:#0F5C46}
+  .logo-tile.ct{background:#FFEDED}
+  .logo-tile.ct svg{color:#E0383B}
+  .logo-tile.sm{width:40px;height:40px;flex:0 0 40px}
+  .logo-tile.sm svg{width:22px;height:22px}
+  .idhead .meta{flex:1;min-width:0}
+  .titlerow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .titlerow h2{margin:0;font-size:22px;line-height:30px;font-weight:600}
+  .tag{display:inline-flex;align-items:center;gap:6px;background:var(--aira-bg-muted);color:var(--aira-text-secondary);border-radius:var(--r-pill);padding:3px 10px;font-size:12px;line-height:16px;font-weight:500}
+  .tag .d{width:6px;height:6px;border-radius:50%;background:var(--aira-text-tertiary)}
+  .tag.sm{font-size:11px;padding:2px 8px}
+  .desc{margin:6px 0 0;color:var(--aira-text-secondary);font-size:14px;line-height:21px;max-width:640px}
+  .statusline{display:flex;align-items:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--aira-border-default);flex-wrap:wrap;row-gap:8px}
+  .statusline .item{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--aira-text-secondary);padding-right:18px;margin-right:18px;border-right:1px solid var(--aira-border-default)}
+  .statusline .item:last-child{border-right:0;margin-right:0;padding-right:0}
+  .statusline .item svg{width:15px;height:15px;color:var(--aira-text-tertiary)}
+  .statusline strong{font-weight:600;color:var(--aira-text-primary)}
+
+  .btn{font:inherit;cursor:pointer;border-radius:var(--r-md);font-weight:500;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+  .btn-primary{background:var(--aira-indigo-600);color:#fff;border:1px solid var(--aira-indigo-600);padding:9px 15px;font-size:14px}
+  .btn-primary:hover{background:#2B2FB0}
+  .btn svg{width:16px;height:16px}
+  .btn-secondary{background:var(--aira-bg-default);color:var(--aira-text-secondary);border:1px solid var(--aira-border-default);padding:9px 15px;font-size:14px}
+  .btn-secondary:hover{border-color:var(--aira-border-strong);background:var(--aira-bg-subtle)}
+  .btn-tertiary{background:none;color:var(--aira-indigo-600);border:0;padding:8px 10px;font-size:14px}
+  .btn-tertiary:hover{background:var(--aira-bg-subtle)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  /* AiraToggle (on/off switch) */
+  .toggle{position:relative;width:36px;height:20px;flex:0 0 36px;border-radius:999px;background:var(--aira-border-strong);border:0;padding:0;cursor:pointer;transition:background .2s ease-out}
+  .toggle::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:var(--sh-sm);transition:transform .2s ease-out}
+  .toggle.on{background:var(--aira-indigo-600)}
+  .toggle.on::after{transform:translateX(16px)}
+  .toggle:disabled{opacity:.5;cursor:not-allowed}
+  .account-actions{display:flex;gap:4px;flex-wrap:wrap;margin-top:12px}
+
+  .section{padding:28px 0 4px}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .sec-head h3{margin:0;font-size:18px;line-height:26px;font-weight:600}
+  .sec-head .hint{font-size:13px;color:var(--aira-text-tertiary)}
+  .sec-sub{display:flex;gap:7px;align-items:flex-start;color:var(--aira-text-tertiary);font-size:13px;line-height:19px;margin:0 0 16px;max-width:640px}
+  .sec-sub svg{width:15px;height:15px;color:var(--aira-text-tertiary);flex:0 0 15px;margin-top:2px}
+  .sec-sub p{margin:0}
+
+  .empty{border:1px dashed var(--aira-border-strong);border-radius:var(--r-md);padding:20px 22px;background:var(--aira-bg-subtle);color:var(--aira-text-tertiary);font-size:14px;line-height:21px}
+  .empty p{margin:0 0 14px;max-width:560px}
+
+  /* connection rows */
+  .conn{width:100%;text-align:left;display:flex;align-items:center;gap:14px;background:var(--aira-bg-default);border:1px solid var(--aira-border-default);border-radius:var(--r-md);padding:14px 16px;margin-bottom:10px;cursor:pointer;font:inherit}
+  .conn:last-child{margin-bottom:0}
+  .conn:hover{border-color:var(--aira-border-strong);background:var(--aira-bg-subtle)}
+  .conn-left{flex:1;min-width:0}
+  .conn-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .conn-nm{font-weight:600;font-size:14px;color:var(--aira-text-primary)}
+  .conn-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--aira-text-tertiary);background:var(--aira-bg-muted);padding:2px 7px;border-radius:5px}
+  .conn-sub{font-size:13px;color:var(--aira-text-tertiary);margin-top:4px}
+  .conn-chev{width:18px;height:18px;color:var(--aira-text-tertiary);flex:0 0 18px}
+  .pill{display:inline-flex;align-items:center;gap:6px;border-radius:var(--r-pill);padding:3px 10px;font-size:12px;font-weight:500;line-height:16px}
+  .pill.live{background:var(--aira-green-bg);color:var(--aira-green-500)}
+  .pill.live .pdot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+  /* permission groups */
+  details.grp{border:1px solid var(--aira-border-default);border-radius:var(--r-md);margin-bottom:10px;overflow:hidden}
+  details.grp:last-child{margin-bottom:0}
+  details.grp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--aira-bg-subtle)}
+  details.grp>summary::-webkit-details-marker{display:none}
+  .chev{width:16px;height:16px;color:var(--aira-text-tertiary);transition:transform .15s ease-out;flex:0 0 16px}
+  details.grp[open] .chev{transform:rotate(90deg)}
+  .grp-title{font-weight:600;font-size:14px}
+  details.grp[open]>summary{border-bottom:1px solid var(--aira-border-subtle)}
+  .trow{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:12px 16px}
+  .trow+.trow{border-top:1px solid var(--aira-border-subtle)}
+  .tleft{display:flex;align-items:center;gap:10px;min-width:0}
+  .verb{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;font-weight:600;color:var(--aira-green-500);background:var(--aira-green-bg);padding:2px 7px;border-radius:5px;letter-spacing:.02em}
+  .tmain{min-width:0}
+  .tname{font-size:14px;color:var(--aira-text-primary)}
+  .tid{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--aira-text-tertiary);margin-top:1px}
+  .status-allow{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--aira-green-500);font-weight:500;white-space:nowrap}
+  .status-allow svg{width:15px;height:15px}
+  .grp-empty{padding:14px 16px;color:var(--aira-text-tertiary);font-size:13px}
+  .aseg{display:inline-flex;background:var(--aira-bg-muted);border-radius:var(--r-md);padding:2px;flex:0 0 auto}
+  .aseg button{border:0;background:transparent;font:inherit;font-size:12px;padding:4px 12px;border-radius:5px;color:var(--aira-text-tertiary);cursor:pointer;line-height:16px}
+  .aseg button.on{background:var(--aira-bg-default);color:var(--aira-text-primary);font-weight:500;box-shadow:var(--sh-sm)}
+  summary .toggle{margin-left:auto}
+  .count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:var(--r-pill);background:var(--aira-bg-muted);color:var(--aira-text-secondary);font-size:12px;font-weight:600}
+
+  /* lightweight "applies to" who-selector */
+  .applies{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap;margin:0 0 18px}
+  .applies-label{font-size:13px;color:var(--aira-text-tertiary);font-weight:500}
+  .who-chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .who-chip{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:13px;font-weight:500;color:#1A2434;background:var(--aira-bg-default);border:1px solid var(--aira-border-default);border-radius:var(--r-pill);padding:6px 14px;cursor:pointer;line-height:18px}
+  .who-chip:hover{border-color:var(--aira-border-strong)}
+  .who-chip.active{border-color:var(--aira-indigo-600);background:var(--aira-indigo-50);font-weight:600}
+  .pavatar{width:34px;height:34px;flex:0 0 34px;border-radius:50%;background:var(--aira-indigo-50);color:var(--aira-indigo-600);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+  .pavatar.xs{width:20px;height:20px;flex:0 0 20px;font-size:10px}
+  .pavatar.lg{width:42px;height:42px;flex:0 0 42px;font-size:15px}
+  .chip-status{font-size:12px;font-weight:500;color:var(--aira-text-tertiary)}
+  .chip-status.blocked{color:#D92D2D}
+  .chip-x{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;margin-left:3px;margin-right:-3px;color:var(--aira-text-tertiary);cursor:pointer}
+  .chip-x:hover{background:rgba(16,24,40,.08);color:var(--aira-text-primary)}
+  .chip-x svg{width:11px;height:11px}
+  .who-add{font:inherit;font-size:13px;font-weight:500;color:var(--aira-indigo-600);background:none;border:1px dashed var(--aira-border-strong);border-radius:var(--r-pill);padding:5px 12px;cursor:pointer}
+  .who-add:hover{background:var(--aira-bg-subtle)}
+  .addpop{position:relative}
+  .add-results{position:absolute;top:calc(100% + 6px);left:0;min-width:320px;background:var(--aira-bg-default);border:1px solid var(--aira-border-default);border-radius:var(--r-md);box-shadow:var(--sh-md);padding:6px;z-index:20;display:none}
+  .add-results.show{display:block}
+  .add-result{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r-sm);cursor:pointer}
+  .add-result:hover{background:var(--aira-bg-subtle)}
+  .add-result .person-main{min-width:0}
+  .person-nm{font-weight:600;font-size:14px;line-height:20px;color:var(--aira-text-primary)}
+  .person-em{font-size:13px;line-height:18px;color:var(--aira-text-tertiary);margin-top:2px}
+  .scope-note{display:flex;align-items:center;gap:10px;justify-content:space-between;background:var(--aira-bg-subtle);border:1px solid var(--aira-border-subtle);border-radius:var(--r-md);padding:10px 14px;margin:0 0 14px;font-size:13px;color:var(--aira-text-secondary)}
+  .scope-note button{font:inherit;font-size:13px;font-weight:600;color:var(--aira-indigo-600);background:none;border:0;cursor:pointer;white-space:nowrap}
+  .person-access{display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid var(--aira-border-default);border-radius:var(--r-md);padding:12px 16px;margin:0 0 14px}
+  .person-access-title{font-weight:600;font-size:14px}
+  .aseg.is-disabled{opacity:.45;pointer-events:none}
+  /* add-connection flow */
+  .conn-form{border:1px solid var(--aira-border-default);border-radius:var(--r-md);padding:18px 20px;max-width:620px}
+  .cf-label{display:block;font-size:13px;font-weight:500;color:var(--aira-text-secondary);margin-bottom:6px}
+  .cf-name{width:100%;height:40px;border:1px solid var(--aira-border-default);border-radius:var(--r-md);padding:0 12px;font:inherit;font-size:14px;background:var(--aira-bg-default);color:var(--aira-text-primary)}
+  .cf-name:disabled{background:var(--aira-bg-muted);color:var(--aira-text-tertiary);cursor:not-allowed}
+  .cf-hint{margin:8px 0 0;font-size:12px;color:var(--aira-text-tertiary)}
+  .cf-actions{display:flex;gap:10px;margin-top:16px}
+  .conn-row{width:100%;text-align:left;font:inherit;display:flex;align-items:center;gap:14px;border:1px solid var(--aira-border-default);border-radius:var(--r-md);padding:14px 16px;cursor:pointer;background:var(--aira-bg-default)}
+  .conn-row:hover{border-color:var(--aira-border-strong);background:var(--aira-bg-subtle)}
+  .pill.warn{background:#FBF1DB;color:#B97300}
+  .pill.warn .pdot{width:6px;height:6px;border-radius:50%;background:currentColor}
+  .setup-warn{display:flex;gap:9px;align-items:flex-start;background:#FBF4E6;border:1px solid #F0E2BE;border-radius:var(--r-md);padding:12px 14px;font-size:13px;line-height:19px;color:#6E5A2C;margin-bottom:16px}
+  .setup-warn svg{width:16px;height:16px;flex:0 0 16px;margin-top:1px;color:#B97300}
+  .setup-actions{display:flex;gap:10px;flex-wrap:wrap}
+  /* connection drawer */
+  .dh-main{flex:1;min-width:0}
+  .dh-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .dh-name{font-size:18px;line-height:26px;font-weight:600;color:var(--aira-text-primary)}
+  .dh-input{font:inherit;font-size:16px;font-weight:600;height:34px;border:1px solid var(--aira-indigo-600);border-radius:var(--r-md);padding:0 10px;box-shadow:0 0 0 3px rgba(52,56,201,.12);outline:none;color:var(--aira-text-primary);max-width:220px}
+  .dh-edit,.dh-save,.dh-cancel{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;background:transparent;color:var(--aira-text-tertiary);cursor:pointer;border-radius:6px}
+  .dh-edit:hover,.dh-save:hover,.dh-cancel:hover{background:var(--aira-bg-muted);color:var(--aira-text-primary)}
+  .dh-save{color:var(--aira-indigo-600)}
+  .dh-edit svg,.dh-save svg,.dh-cancel svg{width:16px;height:16px}
+  .drawer-topbar{display:flex;justify-content:flex-end;padding:12px 16px 0}
+  .conn-idcard{background:var(--aira-bg-subtle);border:1px solid var(--aira-border-subtle);border-radius:var(--r-md);padding:16px 18px}
+  .ci-top{display:flex;gap:14px;align-items:flex-start}
+  .ci-actions{display:flex;align-items:center;gap:8px}
+  .dh-tags{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .card-del{margin-top:16px}
+  .btn-del-sec{background:var(--aira-bg-default);color:var(--aira-text-primary);border:1px solid var(--aira-border-default);padding:8px 14px;border-radius:var(--r-md);font:inherit;font-size:14px;font-weight:500;display:inline-flex;align-items:center;gap:8px;cursor:pointer;margin-top:14px}
+  .btn-del-sec:hover{border-color:var(--aira-border-strong);background:var(--aira-bg-subtle)}
+  .btn-del-sec svg{width:16px;height:16px}
+  .seg.onoff.is-off{opacity:.55;pointer-events:none}
+  .dh-del{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:0;background:transparent;color:var(--aira-text-tertiary);cursor:pointer;border-radius:8px}
+  .dh-del:hover{background:#FDECEC;color:#B42318}
+  .dh-del svg{width:18px;height:18px}
+  .dsec{margin-top:24px}
+  .dsec-h{font-size:16px;line-height:24px;font-weight:600;margin-bottom:12px}
+  /* exceptions summary + access manager */
+  .exc-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;padding:14px 16px;border:1px solid var(--aira-border-default);border-radius:var(--r-md);background:var(--aira-bg-subtle)}
+  .exc-lead{display:flex;align-items:center;gap:10px;min-width:0}
+  .exc-summary .exc-text{font-size:14px;font-weight:600;color:var(--aira-text-primary)}
+  .btn-link{background:none;border:0;color:var(--aira-indigo-600);font:inherit;font-weight:500;font-size:14px;cursor:pointer;padding:4px 6px;white-space:nowrap}
+  .mgr-h{font-size:18px;line-height:26px;font-weight:600;margin:0 0 4px}
+  .mgr-sub{font-size:13px;color:var(--aira-text-tertiary);margin:0 0 18px;max-width:430px;line-height:20px}
+  .tokenfield{display:flex;flex-wrap:wrap;align-items:center;gap:6px;border:1px solid var(--aira-border-default);border-radius:var(--r-md);padding:6px 10px;min-height:44px;cursor:text}
+  .tokenfield:focus-within{border-color:var(--aira-indigo-600);box-shadow:0 0 0 3px rgba(52,56,201,.12)}
+  .tf-icon{width:16px;height:16px;color:var(--aira-text-tertiary);flex:0 0 16px}
+  .tf-chip{display:inline-flex;align-items:center;gap:4px;background:var(--aira-bg-muted);color:#1A2434;border-radius:var(--r-pill);padding:4px 4px 4px 12px;font-size:13px;font-weight:500}
+  .tf-chip button{border:0;background:none;cursor:pointer;color:var(--aira-text-secondary);display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%}
+  .tf-chip button:hover{background:rgba(16,24,40,.1);color:var(--aira-text-primary)}
+  .tf-chip button svg{width:16px;height:16px;stroke-width:2.25}
+  .tf-input{flex:1;min-width:150px;border:0;outline:0;font:inherit;font-size:14px;padding:4px 2px;background:none;color:var(--aira-text-primary)}
+  .tf-input::placeholder{color:var(--aira-text-placeholder)}
+  .acc-pick{position:relative}
+  .acc-results{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;background:var(--aira-bg-surface,#fff);border:1px solid var(--aira-border-default);border-radius:var(--r-md);box-shadow:0 10px 28px rgba(16,24,40,.14);max-height:216px;overflow:auto}
+  .acc-result{display:flex;align-items:center;gap:12px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--aira-border-subtle)}
+  .acc-result:last-child{border-bottom:0}
+  .acc-result:hover{background:var(--aira-bg-subtle)}
+  .acc-check,.rowcheck{width:18px;height:18px;flex:0 0 18px;border:1px solid var(--aira-border-strong);border-radius:5px;display:inline-flex;align-items:center;justify-content:center;color:#fff;cursor:pointer}
+  .acc-result.sel .acc-check,.exc-item.sel .rowcheck{background:var(--aira-indigo-600);border-color:var(--aira-indigo-600)}
+  .acc-check svg,.rowcheck svg{width:12px;height:12px;opacity:0}
+  .acc-result.sel .acc-check svg,.exc-item.sel .rowcheck svg{opacity:1}
+  .acc-apply{margin-top:16px}
+  .acc-apply-head{font-size:14px;line-height:20px;font-weight:600;color:var(--aira-text-primary);margin:0 0 10px}
+  .acc-apply-head strong{color:var(--aira-text-primary)}
+  .acc-apply-foot{display:flex;justify-content:flex-end;margin-top:12px}
+  .preset-seg{display:inline-flex;background:var(--aira-bg-muted);border-radius:var(--r-md);padding:3px}
+  .preset-seg button{border:0;background:transparent;font:inherit;font-size:13px;padding:5px 12px;border-radius:6px;color:var(--aira-text-tertiary);cursor:pointer}
+  .preset-seg button.on{background:var(--aira-bg-default);color:var(--aira-text-primary);font-weight:500;box-shadow:var(--sh-sm)}
+  .bulk-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--aira-indigo-50);border:1px solid var(--aira-indigo-100);border-radius:var(--r-md);padding:10px 14px;margin:18px 0 10px;font-size:13px;color:var(--aira-text-secondary)}
+  .bulk-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .exc-list{margin-top:18px}
+  .exc-item{border-bottom:1px solid var(--aira-border-subtle)}
+  .exc-item:last-child{border-bottom:0}
+  .exc-row{display:flex;align-items:flex-start;gap:12px;padding:12px 2px}
+  .exc-main{flex:1;min-width:0;display:flex;align-items:flex-start;gap:12px;background:none;border:0;padding:0;cursor:pointer;text-align:left;font:inherit}
+  .exc-main .person-main{min-width:0}
+  .exc-chev{color:var(--aira-text-tertiary);transition:transform .15s ease-out;flex:0 0 18px;margin-top:1px}
+  .exc-item.open .exc-chev{transform:rotate(90deg)}
+  .exc-detail{padding:2px 2px 16px 28px}
+  .pgrp{border:1px solid var(--aira-border-default);border-radius:var(--r-md);margin-bottom:10px;overflow:hidden}
+  .pgrp:last-child{margin-bottom:0}
+  .pgrp-head{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--aira-bg-subtle)}
+  .pgrp-head .toggle{margin-left:auto}
+  .ptool{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--aira-border-subtle)}
+  .ptool .tmain{flex:1;min-width:0}
+  .exc-preset{font-size:12px;font-weight:500;padding:3px 10px;border-radius:var(--r-pill);white-space:nowrap}
+  .exc-preset.block{background:#FDECEC;color:#B42318}
+  .exc-preset.read{background:var(--aira-green-bg);color:var(--aira-green-500)}
+  .exc-preset.full{background:var(--aira-indigo-50);color:var(--aira-indigo-600)}
+  .exc-preset.custom{background:var(--aira-bg-muted);color:var(--aira-text-secondary)}
+  .exc-sum{font-size:12px;font-weight:500;color:var(--aira-text-secondary);background:var(--aira-bg-muted);padding:3px 10px;border-radius:var(--r-pill);white-space:nowrap;margin-top:1px}
+  .exc-sum.none{background:#FDECEC;color:#B42318}
+  .exc-x{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:0;background:transparent;color:var(--aira-text-tertiary);border-radius:6px;cursor:pointer}
+  .exc-x:hover{background:var(--aira-bg-muted);color:var(--aira-text-primary)}
+  /* chevron + close: same stroke + colour; × sized down slightly so the two glyphs read optically equal */
+  .exc-chev,.exc-x svg{stroke-width:2}
+  .exc-chev{width:18px;height:18px}
+  .exc-x svg{width:16px;height:16px}
+  .exc-empty{color:var(--aira-text-tertiary);font-size:13px;padding:16px 2px}
+  .muted{color:var(--aira-text-tertiary)}
+  .sp-add{position:relative;max-width:480px;margin:0 0 18px}
+  .add-input-wrap{position:relative}
+  .add-input-wrap>svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--aira-text-tertiary);pointer-events:none}
+  .add-input{width:100%;height:40px;border:1px solid var(--aira-border-default);border-radius:var(--r-md);padding:0 14px 0 40px;font:inherit;font-size:14px;background:var(--aira-bg-default);color:var(--aira-text-primary)}
+  .add-input::placeholder{color:var(--aira-text-placeholder)}
+  .add-input:focus{outline:none;border-color:var(--aira-indigo-600);box-shadow:0 0 0 3px rgba(52,56,201,.12)}
+  .sp-add .add-results{left:0;right:0;min-width:0}
+
+  /* connector details */
+  .detailcard{background:var(--aira-bg-subtle);border:1px solid var(--aira-border-subtle);border-radius:var(--r-md);padding:20px 22px}
+  .detailgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px 28px}
+  .dk{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--aira-text-tertiary);font-weight:600;margin-bottom:6px}
+  .dv{font-size:14px;color:var(--aira-text-primary)}
+  .dv.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
+  .dv.mono div{margin-bottom:2px}
+  .asksfor{margin-top:22px;padding-top:18px;border-top:1px solid var(--aira-border-default)}
+  .secretnote{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--aira-text-tertiary);margin:8px 0 12px}
+  .secretnote svg{width:14px;height:14px;flex:0 0 14px}
+  .fieldchips{display:flex;flex-wrap:wrap;gap:8px}
+  .fchip{font-size:12px;color:var(--aira-text-secondary);background:var(--aira-bg-muted);border-radius:var(--r-sm);padding:4px 10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+  /* connection drawer */
+  .scrim{position:absolute;inset:0;background:rgba(16,24,40,.35);opacity:0;visibility:hidden;transition:opacity .2s ease-out;z-index:40}
+  .scrim.open{opacity:1;visibility:visible}
+  .drawer{position:absolute;top:0;right:0;height:100%;width:560px;max-width:94%;background:var(--aira-bg-default);box-shadow:-8px 0 30px rgba(16,24,40,.14);transform:translateX(100%);transition:transform .25s ease-out;z-index:50;display:flex;flex-direction:column}
+  .drawer.open{transform:translateX(0)}
+  .drawer-head{display:flex;gap:14px;align-items:flex-start;padding:20px 22px;border-bottom:1px solid var(--aira-border-subtle)}
+  .drawer-head .xclose{margin-left:auto;flex:0 0 32px}
+  .drawer-head h2{margin:0}
+  .drawer-meta{font-size:13px;color:var(--aira-text-tertiary);margin-top:5px}
+  .drawer-body{padding:20px 22px;overflow:auto;flex:1}
+  .drawer-foot{display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:14px 22px;border-top:1px solid var(--aira-border-subtle)}
+  .dsub{margin:0 0 14px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--aira-text-tertiary);font-weight:600}
+  .dfield{margin-bottom:16px}
+  .dfield label{display:block;font-size:13px;color:var(--aira-text-secondary);font-weight:500;margin-bottom:6px}
+  .dfield input{width:100%;height:40px;border:1px solid var(--aira-border-default);border-radius:var(--r-md);padding:0 12px;font:inherit;font-size:14px;background:var(--aira-bg-subtle);color:var(--aira-text-tertiary)}
+  .drawer-body .secretnote{margin-top:6px}
+</style>
+</head>
+<body class="mode-user">
+<div class="app">
+  <nav class="rail" aria-label="Primary">
+    <div class="logo" aria-label="aiRA"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6268FF"/><stop offset="1" stop-color="#3BA7FF"/></linearGradient></defs><path d="M12 3l1.6 4.8L18 9l-4.4 1.2L12 15l-1.6-4.8L6 9l4.4-1.2L12 3z" fill="url(#g)"/><path d="M18.5 14l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2z" fill="url(#g)"/></svg></div>
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></div>
+    <div class="ic active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l1.6 4.8L18 9l-4.4 1.2L12 15l-1.6-4.8L6 9z"/></svg></div>
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20.6 13.8 12 21l-8.6-7.2a4.1 4.1 0 1 1 5.8-5.8L12 9.6l2.8-1.6a4.1 4.1 0 1 1 5.8 5.8z"/></svg></div>
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 11h8V3H3zM13 21h8v-8h-8zM13 3v6h8V3zM3 21h8v-6H3z"/></svg></div>
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></div>
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3"/><path d="M4 20a5 5 0 0 1 10 0M15 7a3 3 0 0 1 0 6"/></svg></div>
+    <div class="sp"></div>
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3.9a7 7 0 0 0-1.7-1l-.3-2.5H9.4l-.3 2.5a7 7 0 0 0-1.7 1l-2.3-.9-2 3.4L5 11a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 1.7 1l.3 2.5h4.2l.3-2.5a7 7 0 0 0 1.7-1l2.3.9 2-3.4L19 13a7 7 0 0 0 0-1z"/></svg></div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="org">aiRA Playground <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+      <div class="topright">
+        <div class="sessions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Sessions</div>
+        <div class="avatar">A</div>
+      </div>
+    </div>
+
+    <div class="settings-head">
+      <h1>Settings</h1>
+      <button class="xclose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+
+    <div class="settings-body">
+      <aside class="subnav">
+        <a href="#">Context</a><a href="#">Whitelist URLs</a><a href="#">Playbooks</a><a href="#">Usage</a><a href="#">Billing &amp; Credits</a><a href="#" class="active">Connectors</a>
+      </aside>
+
+      <main class="content">
+        <div class="content-inner">
+
+          <div class="toprow">
+            <a href="#" class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg> All connectors</a>
+            <div class="mode">
+              <div class="seg" id="modeseg"><button data-mode="admin">Admin</button><button data-mode="user" class="on">User</button></div>
+            </div>
+          </div>
+
+          <!-- ============ ALIVEO ============ -->
+          <div class="connector active" data-c="aliveo">
+
+          <div class="p-head">
+            <div class="idhead">
+              <div class="logo-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M7 15 17 6"/><path d="M8.5 15.5v-1.5M11.5 15.5v-3.5M14.5 15.5v-5.5"/></svg></div>
+              <div class="meta">
+                <div class="titlerow"><h2>Aliveo AI</h2><span class="tag">Connector</span></div>
+                <p class="desc">Let aiRA answer questions about your advertising performance across Google Ads, Meta and other connected ad platforms.</p>
+              </div>
+              <button class="btn btn-primary user-only add-conn-open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add connection</button>
+              <button class="toggle on admin-only" role="switch" aria-checked="true" aria-label="Turn this connector on or off"></button>
+            </div>
+            <div class="statusline">
+              <span class="item user-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Your Aliveo settings</span>
+              <span class="item admin-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/></svg>Admin controls</span>
+              <span class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>No connections yet</span>
+              <span class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>aiRA can do <strong>4 reads</strong>, 0 writes</span>
+              <span class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Signs in with OAuth</span>
+            </div>
+          </div>
+
+          <section class="section" id="aliveo-conns">
+            <div class="sec-head"><h3>Connections</h3></div>
+            <div class="empty user-only" id="aliveo-empty">
+              <p>You don’t have a connection yet. Add one to get started.</p>
+              <button class="btn btn-secondary add-conn-open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add connection</button>
+            </div>
+            <div class="empty admin-only">No connections yet. Permissions on this page apply to everyone who connects.</div>
+            <div class="conn-list user-only"></div>
+          </section>
+
+          <section class="section">
+            <div class="sec-head"><h3>What aiRA can do</h3><span class="hint">4 tools · 4 read, 0 write</span></div>
+
+            <details class="grp" open>
+              <summary><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg><span class="grp-title">Read</span><span class="count">4</span><button class="toggle on admin-only" role="switch" aria-checked="true" aria-label="Allowed"></button></summary>
+              <div>
+                <div class="trow"><div class="tleft"><span class="verb">GET</span><div class="tmain"><div class="tname">Read the Aliveo usage guide</div><div class="tid">usage_guide</div></div></div><span class="status-allow user-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>Allowed</span><button class="toggle on admin-only" role="switch" aria-checked="true" aria-label="Allowed"></button></div>
+                <div class="trow"><div class="tleft"><span class="verb">GET</span><div class="tmain"><div class="tname">List connected ad accounts</div><div class="tid">list_accounts</div></div></div><span class="status-allow user-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>Allowed</span><button class="toggle on admin-only" role="switch" aria-checked="true" aria-label="Allowed"></button></div>
+                <div class="trow"><div class="tleft"><span class="verb">GET</span><div class="tmain"><div class="tname">Ask Aliveo about advertising performance</div><div class="tid">ask</div></div></div><span class="status-allow user-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>Allowed</span><button class="toggle on admin-only" role="switch" aria-checked="true" aria-label="Allowed"></button></div>
+                <div class="trow"><div class="tleft"><span class="verb">GET</span><div class="tmain"><div class="tname">Connect or repair an ad account</div><div class="tid">connect_ad_account</div></div></div><span class="status-allow user-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>Allowed</span><button class="toggle on admin-only" role="switch" aria-checked="true" aria-label="Allowed"></button></div>
+              </div>
+            </details>
+            <details class="grp">
+              <summary><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg><span class="grp-title">Write</span><span class="count">0</span><button class="toggle on admin-only" role="switch" aria-checked="true" aria-label="Allowed"></button></summary>
+              <div class="grp-empty">aiRA can't make any changes through this connector.</div>
+            </details>
+
+            <div class="exc-summary admin-only">
+              <span class="exc-lead"><span class="exc-text">People with custom permissions</span><span class="count exc-count">1</span></span>
+              <button class="btn-link manage-access">Manage permissions →</button>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="sec-head"><h3>Connector details</h3></div>
+            <div class="detailcard">
+              <div class="detailgrid">
+                <div><div class="dk">ID</div><div class="dv mono">aliveo</div></div>
+                <div><div class="dk">Host</div><div class="dv mono">api-capillary.aliveo.ai</div></div>
+                <div><div class="dk">Signs in</div><div class="dv mono">oauth2</div></div>
+                <div><div class="dk">Tools</div><div class="dv">4 · 4 read, 0 write</div></div>
+              </div>
+              <div class="asksfor">
+                <div class="dk">Asks for</div>
+                <div class="secretnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Stored by aiRA and kept secret — you won't see these again.</div>
+                <div class="fieldchips"><span class="fchip">Access Token</span><span class="fchip">Refresh Token</span><span class="fchip">Expires At</span><span class="fchip">Connected as</span><span class="fchip">Issuer</span><span class="fchip">Scope</span><span class="fchip">Client Id</span><span class="fchip">Client Secret</span><span class="fchip">Client Auth</span></div>
+              </div>
+            </div>
+          </section>
+
+          </div><!-- /aliveo -->
+
+          <!-- ============ CLEVERTAP ============ -->
+          <div class="connector" data-c="clevertap">
+
+          <div class="p-head">
+            <div class="idhead">
+              <div class="logo-tile ct"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2a10 10 0 1 0 9 14.5A8 8 0 1 1 13 4.1 10 10 0 0 0 13 2z"/></svg></div>
+              <div class="meta">
+                <div class="titlerow"><h2>CleverTap</h2><span class="tag">Connector</span></div>
+                <p class="desc">Let aiRA push an audience to CleverTap as a Custom List Segment.</p>
+              </div>
+              <button class="btn btn-primary user-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add connection</button>
+              <button class="toggle on admin-only" role="switch" aria-checked="true" aria-label="Turn this connector on or off"></button>
+            </div>
+            <div class="statusline">
+              <span class="item user-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Your CleverTap settings</span>
+              <span class="item admin-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/></svg>Admin controls</span>
+              <span class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg><strong>2 connections</strong></span>
+              <span class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V8m0 0 3.5 3.5M4 8 7.5 4.5M11 20h9"/></svg>aiRA can do 0 reads, <strong>4 writes</strong></span>
+              <span class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Signs in with a header key</span>
+            </div>
+          </div>
+
+          <section class="section">
+            <div class="sec-head"><h3>Connections</h3></div>
+            <button class="conn" data-conn="Test" data-code="org_test">
+              <div class="conn-left">
+                <div class="conn-top"><span class="conn-nm">Test</span><span class="conn-code">org_test</span><span class="tag sm">Shared with you</span></div>
+                <div class="conn-sub">Everyone in the organization</div>
+              </div>
+              <span class="pill live"><span class="pdot"></span>Live</span>
+              <svg class="conn-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+            <button class="conn" data-conn="Prod" data-code="org_prod">
+              <div class="conn-left">
+                <div class="conn-top"><span class="conn-nm">Prod</span><span class="conn-code">org_prod</span><span class="tag sm">Shared with you</span></div>
+                <div class="conn-sub">Everyone in the organization</div>
+              </div>
+              <span class="pill live"><span class="pdot"></span>Live</span>
+              <svg class="conn-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+          </section>
+
+          <section class="section">
+            <div class="sec-head"><h3>What aiRA can do</h3><span class="hint">4 tools · 0 read, 4 write</span></div>
+
+            <div class="sec-sub">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+              <p>Allowing a write does not mean it runs unattended — a person will be asked, every time.</p>
+            </div>
+            <details class="grp">
+              <summary><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg><span class="grp-title">Read</span><span class="count">0</span><button class="toggle on admin-only" role="switch" aria-checked="true" aria-label="Allowed"></button></summary>
+              <div class="grp-empty">aiRA doesn't read anything through this connector.</div>
+            </details>
+            <details class="grp" open>
+              <summary><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg><span class="grp-title">Write</span><span class="count">4</span><button class="toggle on admin-only" role="switch" aria-checked="true" aria-label="Allowed"></button></summary>
+              <div class="grp-empty">Four tools that push and update audiences in CleverTap as Custom List Segments.</div>
+            </details>
+
+            <div class="exc-summary admin-only">
+              <span class="exc-lead"><span class="exc-text">People with custom permissions</span><span class="count exc-count">1</span></span>
+              <button class="btn-link manage-access">Manage permissions →</button>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="sec-head"><h3>Connector details</h3></div>
+            <div class="detailcard">
+              <div class="detailgrid">
+                <div><div class="dk">ID</div><div class="dv mono">clevertap</div></div>
+                <div><div class="dk">Hosts</div><div class="dv mono"><div>api.clevertap.com</div><div>in1.api.clevertap.com</div><div>sg1.api.clevertap.com</div><div>us1.api.clevertap.com</div><div>aps3.api.clevertap.com</div><div>mec1.api.clevertap.com</div></div></div>
+                <div><div class="dk">Signs in</div><div class="dv mono">static_header</div></div>
+                <div><div class="dk">Tools</div><div class="dv">4 · 0 read, 4 write</div></div>
+              </div>
+              <div class="asksfor">
+                <div class="dk">Asks for</div>
+                <div class="secretnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Stored by aiRA and kept secret — you won't see these again.</div>
+                <div class="fieldchips"><span class="fchip">Account ID / Project ID</span><span class="fchip">Passcode</span><span class="fchip">Region</span><span class="fchip">CleverTap admin email</span></div>
+              </div>
+            </div>
+          </section>
+
+          </div><!-- /clevertap -->
+
+        </div>
+      </main>
+
+      <div class="scrim" id="scrim"></div>
+      <aside class="drawer" id="drawer" aria-hidden="true">
+        <div class="drawer-head">
+          <div class="logo-tile ct sm"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2a10 10 0 1 0 9 14.5A8 8 0 1 1 13 4.1 10 10 0 0 0 13 2z"/></svg></div>
+          <div style="flex:1;min-width:0">
+            <div class="titlerow"><h2 id="drawerName" style="font-size:18px;line-height:26px">Test</h2><span class="pill live"><span class="pdot"></span>Live</span></div>
+            <div class="drawer-meta"><span id="drawerCode">org_test</span> · CleverTap · Shared with you</div>
+          </div>
+          <button class="xclose drawer-x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+        <div class="drawer-body">
+          <h4 class="dsub">Credential</h4>
+          <div class="dfield"><label>Account ID / Project ID</label><input readonly value="ZWR-57W-K66Z"></div>
+          <div class="dfield"><label>Passcode</label><input readonly value="••••••••"></div>
+          <div class="dfield"><label>Region</label><div class="seg region"><button class="on">in1</button><button>sg1</button><button>us1</button><button>aps3</button><button>mec1</button><button>eu1</button></div></div>
+          <div class="dfield"><label>CleverTap admin email</label><input readonly value="••••••••"></div>
+          <div class="secretnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Shared with you — credentials are kept secret.</div>
+        </div>
+      </aside>
+
+      <!-- connection setup drawer (opens straight from Add connection) -->
+      <aside class="drawer" id="setupdrawer" aria-hidden="true">
+        <div class="drawer-topbar"><button class="xclose drawer-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+        <div class="drawer-body" style="padding-top:4px">
+
+          <div class="conn-idcard">
+            <div class="ci-top">
+              <div class="logo-tile sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M7 15 17 6"/><path d="M8.5 15.5v-1.5M11.5 15.5v-3.5M14.5 15.5v-5.5"/></svg></div>
+              <div class="dh-main">
+                <div class="dh-title">
+                  <span class="dh-name" id="cname">Aliveo AI</span>
+                  <input class="dh-input" id="cname-input" value="Aliveo AI" hidden>
+                  <button class="dh-edit" id="cname-edit" aria-label="Rename connection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+                  <button class="dh-save" id="cname-save" aria-label="Save name" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 13 4 4L19 7"/></svg></button>
+                  <button class="dh-cancel" id="cname-cancel" aria-label="Cancel rename" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+                </div>
+                <div class="dh-tags"><span class="tag">Connection</span><span class="pill warn"><span class="pdot"></span>Not set up</span></div>
+                <div class="drawer-meta" style="margin-top:8px">aliveo_ai · Aliveo AI</div>
+                <div class="drawer-meta">Last updated Oct 25, 2026 · by ann.francis@capillarytech.com</div>
+                <button class="btn-del-sec" id="conn-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>Delete connection</button>
+              </div>
+              <div class="ci-actions">
+                <button class="toggle" disabled title="Sign in to turn this on" role="switch" aria-checked="false" aria-label="Turn this connection on or off"></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="dsec">
+            <div class="dsec-h">Account</div>
+            <div class="setup-warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span>Not signed in yet. Nothing on this connection runs until its owner signs in with Aliveo.</span></div>
+            <div class="account-actions">
+              <button class="btn btn-tertiary connect-act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg>Connect with single sign-on</button>
+              <button class="btn btn-tertiary connect-act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Connect with a password</button>
+            </div>
+          </div>
+
+          <div class="dsec">
+            <div class="dsec-h">What aiRA can do</div>
+            <details class="grp" open>
+              <summary><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg><span class="grp-title">Read</span><span class="count">4</span><button class="toggle on" role="switch" aria-checked="true" aria-label="Allowed"></button></summary>
+              <div>
+                <div class="trow"><div class="tleft"><span class="verb">GET</span><div class="tmain"><div class="tname">Read the Aliveo usage guide</div><div class="tid">usage_guide</div></div></div><button class="toggle on" role="switch" aria-checked="true" aria-label="Allowed"></button></div>
+                <div class="trow"><div class="tleft"><span class="verb">GET</span><div class="tmain"><div class="tname">List connected ad accounts</div><div class="tid">list_accounts</div></div></div><button class="toggle on" role="switch" aria-checked="true" aria-label="Allowed"></button></div>
+                <div class="trow"><div class="tleft"><span class="verb">GET</span><div class="tmain"><div class="tname">Ask Aliveo about advertising performance</div><div class="tid">ask</div></div></div><button class="toggle on" role="switch" aria-checked="true" aria-label="Allowed"></button></div>
+                <div class="trow"><div class="tleft"><span class="verb">GET</span><div class="tmain"><div class="tname">Connect or repair an ad account</div><div class="tid">connect_ad_account</div></div></div><button class="toggle on" role="switch" aria-checked="true" aria-label="Allowed"></button></div>
+              </div>
+            </details>
+            <details class="grp">
+              <summary><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg><span class="grp-title">Write</span><span class="count">0</span><button class="toggle on" role="switch" aria-checked="true" aria-label="Allowed"></button></summary>
+              <div class="grp-empty">aiRA can't make any changes through this connector.</div>
+            </details>
+          </div>
+
+        </div>
+        <div class="drawer-foot">
+          <button class="btn btn-secondary drawer-x">Cancel</button>
+          <button class="btn btn-primary" id="conn-save">Set up</button>
+        </div>
+      </aside>
+
+      <!-- access manager (exceptions) -->
+      <aside class="drawer" id="accessdrawer" aria-hidden="true">
+        <div class="drawer-topbar"><button class="xclose drawer-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+        <div class="drawer-body" style="padding-top:4px">
+          <div class="mgr-h">Manage permissions</div>
+          <p class="mgr-sub">Set custom permissions for specific people.</p>
+
+          <div class="acc-pick">
+            <div class="tokenfield" id="acc-field"><svg class="tf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input class="tf-input" id="acc-search" placeholder="Add people by name or email…" autocomplete="off"></div>
+            <div class="acc-results" id="acc-results" hidden></div>
+          </div>
+          <div class="acc-apply" id="acc-apply" hidden>
+            <div class="acc-apply-head">What they can do</div>
+            <div id="acc-perms"></div>
+          </div>
+
+          <div class="exc-list" id="exc-list"></div>
+        </div>
+        <div class="drawer-foot">
+          <button class="btn btn-secondary drawer-x">Cancel</button>
+          <button class="btn btn-primary" id="acc-save" disabled>Save</button>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const body=document.body;
+  function initials(n){return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();}
+  document.querySelectorAll('#modeseg button').forEach(b=>b.addEventListener('click',()=>{
+    body.classList.remove('mode-user','mode-admin'); body.classList.add('mode-'+b.dataset.mode);
+    document.querySelectorAll('#modeseg button').forEach(x=>x.classList.toggle('on',x===b));
+  }));
+  document.querySelectorAll('#connseg button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#connseg button').forEach(x=>x.classList.toggle('on',x===b));
+    document.querySelectorAll('.connector').forEach(c=>c.classList.toggle('active', c.dataset.c===b.dataset.c));
+  }));
+  document.querySelectorAll('.aseg, .seg:not(#modeseg):not(#connseg)').forEach(seg=>{
+    seg.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',e=>{
+      e.preventDefault(); e.stopPropagation();
+      seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===btn));
+    }));
+  });
+  document.querySelectorAll('.toggle').forEach(t=>t.addEventListener('click',e=>{
+    e.preventDefault(); e.stopPropagation();
+    if(t.disabled) return;
+    const on=!t.classList.contains('on');
+    t.classList.toggle('on',on); t.setAttribute('aria-checked', on?'true':'false');
+  }));
+  // group master toggle (in the summary) enables/disables every tool under it
+  document.querySelectorAll('details.grp > summary .toggle').forEach(master=>{
+    const grp=master.closest('details.grp');
+    master.addEventListener('click',()=>{
+      const on=master.classList.contains('on');
+      grp.querySelectorAll('.trow .toggle').forEach(t=>{
+        t.disabled=!on;
+        t.classList.toggle('on',on);
+        t.setAttribute('aria-checked', String(on));
+      });
+    });
+  });
+
+  // "Applies to" scoping — who first, lightweight
+  const PEOPLE=[
+    {n:'Meghana Revanna',e:'meghana.revanna@capillarytech.com'},
+    {n:'Rahul Nair',e:'rahul.nair@capillarytech.com'},
+    {n:'Priya Menon',e:'priya.menon@capillarytech.com'},
+    {n:'Dev Shah',e:'dev.shah@capillarytech.com'},
+    {n:'Sara Khan',e:'sara.khan@capillarytech.com'},
+    {n:'Imran Qureshi',e:'imran.qureshi@capillarytech.com'}
+  ];
+  // connection drawer
+  const scrim=document.getElementById('scrim'), cdrawer=document.getElementById('drawer');
+  function closeAll(){document.querySelectorAll('.drawer').forEach(d=>d.classList.remove('open')); scrim.classList.remove('open');}
+  scrim.addEventListener('click',closeAll);
+  document.querySelectorAll('.drawer-x').forEach(x=>x.addEventListener('click',closeAll));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAll();});
+  document.querySelectorAll('.conn').forEach(c=>c.addEventListener('click',()=>{
+    document.getElementById('drawerName').textContent=c.dataset.conn;
+    document.getElementById('drawerCode').textContent=c.dataset.code;
+    cdrawer.classList.add('open'); scrim.classList.add('open');
+  }));
+
+  // add-connection flow (Aliveo): Add connection -> opens the setup drawer directly (rename lives in the drawer)
+  (function(){
+    const sec=document.getElementById('aliveo-conns'); if(!sec) return;
+    const empty=document.getElementById('aliveo-empty'), list=sec.querySelector('.conn-list');
+    const setup=document.getElementById('setupdrawer');
+    function openSetup(){ setup.classList.add('open'); scrim.classList.add('open'); }
+    function addConnection(){
+      if(!list.children.length){
+        const row=document.createElement('button'); row.className='conn-row';
+        row.innerHTML='<div class="conn-left"><div class="conn-top"><span class="conn-nm">Aliveo AI</span><span class="conn-code">aliveo_ai</span><span class="tag sm">Yours only</span></div><div class="conn-sub">Not signed in — finish setup to go live</div></div><span class="pill warn"><span class="pdot"></span>Not set up</span><svg class="conn-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>';
+        list.appendChild(row); row.addEventListener('click',openSetup);
+      }
+      empty.hidden=true; openSetup();
+    }
+    document.querySelectorAll('.add-conn-open').forEach(b=>b.addEventListener('click',addConnection));
+
+    // delete the connection from the drawer
+    const del=document.getElementById('conn-del');
+    if(del) del.addEventListener('click',()=>{ list.innerHTML=''; empty.hidden=false; closeAll(); });
+
+    // rename inside the drawer
+    const edit=document.getElementById('cname-edit'), save=document.getElementById('cname-save'), cancel=document.getElementById('cname-cancel');
+    const nm=document.getElementById('cname'), input=document.getElementById('cname-input');
+    function startEdit(){ input.value=nm.textContent; nm.hidden=true; edit.hidden=true; input.hidden=false; save.hidden=false; cancel.hidden=false; input.focus(); input.select(); }
+    function endEdit(commit){ if(commit && input.value.trim()) nm.textContent=input.value.trim(); input.hidden=true; save.hidden=true; cancel.hidden=true; nm.hidden=false; edit.hidden=false; }
+    edit.addEventListener('click',startEdit);
+    save.addEventListener('click',()=>endEdit(true));
+    cancel.addEventListener('click',()=>endEdit(false));
+    input.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();endEdit(true);} if(e.key==='Escape'){e.stopPropagation();endEdit(false);} });
+  })();
+
+  // ===== access manager: add people, set the connector's actual permissions, bulk =====
+  (function(){
+    const drawer=document.getElementById('accessdrawer'); if(!drawer) return;
+    const READTOOLS=[['Read the Aliveo usage guide','usage_guide'],['List connected ad accounts','list_accounts'],['Ask Aliveo about advertising performance','ask'],['Connect or repair an ad account','connect_ad_account']];
+    const ALL=READTOOLS.map(t=>t[1]);
+    let exceptions=[{name:'Ann Francis',email:'ann.francis@capillarytech.com',allowed:new Set()}];
+    const addSel=new Set();
+    const search=document.getElementById('acc-search'), results=document.getElementById('acc-results');
+    const applyBar=document.getElementById('acc-apply'), field=document.getElementById('acc-field'), saveBtn=document.getElementById('acc-save'), addPerms=document.getElementById('acc-perms');
+    const listEl=document.getElementById('exc-list');
+    const CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>';
+    const XSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+    const tog=(on,dis)=>`<button class="toggle${on?' on':''}" role="switch" aria-checked="${on}" aria-label="Allowed"${dis?' disabled':''}></button>`;
+    function summary(a){ const r=ALL.filter(id=>a.has(id)).length; if(r===0) return ['No permissions','none']; if(r===ALL.length) return ['All permissions','']; return [r+' of '+ALL.length+' permissions','']; }
+    function permHTML(a){
+      const allRead=ALL.every(id=>a.has(id));
+      return `<div class="pgrp" data-grp="read"><div class="pgrp-head"><span class="grp-title">Read</span><span class="count">${ALL.length}</span>${tog(allRead,false)}</div>${READTOOLS.map(t=>`<div class="ptool" data-tool="${t[1]}"><span class="verb">GET</span><div class="tmain"><div class="tname">${t[0]}</div><div class="tid">${t[1]}</div></div>${tog(a.has(t[1]),false)}</div>`).join('')}</div>
+      <div class="pgrp" data-grp="write"><div class="pgrp-head"><span class="grp-title">Write</span><span class="count">0</span>${tog(false,true)}</div><div class="grp-empty">aiRA can't make any changes through this connector.</div></div>`;
+    }
+    function readPerms(container){ const s=new Set(); container.querySelectorAll('.ptool').forEach(row=>{ if(row.querySelector('.toggle').classList.contains('on')) s.add(row.dataset.tool); }); return s; }
+    function handlePermClick(e){
+      const tgl=e.target.closest('.toggle'); if(!tgl||tgl.disabled) return false;
+      e.preventDefault();
+      const on=!tgl.classList.contains('on'); tgl.classList.toggle('on',on); tgl.setAttribute('aria-checked',String(on));
+      const head=tgl.closest('.pgrp-head');
+      if(head){ head.parentElement.querySelectorAll('.ptool .toggle').forEach(t=>{ t.classList.toggle('on',on); t.setAttribute('aria-checked',String(on)); }); }
+      return true;
+    }
+    function updateSummary(){
+      const n=exceptions.length;
+      document.querySelectorAll('.exc-count').forEach(el=>el.textContent=n);
+    }
+
+    const markDirty=()=>{ saveBtn.disabled=false; };
+    function openMgr(){ addSel.clear(); field.querySelectorAll('.tf-chip').forEach(c=>c.remove()); search.value=''; search.placeholder='Add people by name or email…'; results.hidden=true; applyBar.hidden=true; addPerms.innerHTML=''; saveBtn.disabled=true; renderList(); drawer.classList.add('open'); document.getElementById('scrim').classList.add('open'); }
+    document.querySelectorAll('.manage-access').forEach(b=>b.addEventListener('click',openMgr));
+
+    function renderResults(q){
+      const taken=new Set([...exceptions.map(e=>e.email), ...addSel]);
+      const list=PEOPLE.filter(p=>!taken.has(p.e) && (!q||(p.n+' '+p.e).toLowerCase().includes(q.toLowerCase())));
+      results.innerHTML=list.length? list.map(p=>`<div class="acc-result" data-e="${p.e}" data-n="${p.n}"><div class="person-main"><div class="person-nm">${p.n}</div><div class="person-em">${p.e}</div></div></div>`).join('') : '<div class="acc-result" style="cursor:default;color:var(--aira-text-tertiary)">No people match.</div>';
+      results.hidden=false;
+    }
+    function syncAdd(){
+      const was=applyBar.hidden;
+      applyBar.hidden=addSel.size===0;
+      if(addSel.size && was) addPerms.innerHTML=permHTML(new Set(ALL));
+      search.placeholder = addSel.size? 'Add another person' : 'Add people by name or email…';
+    }
+    function addChip(em,nm){
+      addSel.add(em);
+      const chip=document.createElement('span'); chip.className='tf-chip'; chip.dataset.e=em;
+      chip.innerHTML=nm+'<button aria-label="Remove">'+XSVG+'</button>';
+      field.insertBefore(chip,search);
+      search.value=''; renderResults(''); syncAdd(); markDirty(); search.focus();
+    }
+    field.addEventListener('click',e=>{
+      const x=e.target.closest('.tf-chip button');
+      if(x){ const chip=x.closest('.tf-chip'); addSel.delete(chip.dataset.e); chip.remove(); renderResults(search.value); syncAdd(); markDirty(); return; }
+      search.focus();
+    });
+    search.addEventListener('focus',()=>renderResults(search.value));
+    search.addEventListener('input',()=>renderResults(search.value));
+    search.addEventListener('blur',()=>setTimeout(()=>{ results.hidden=true; },160));
+    results.addEventListener('mousedown',e=>{ const r=e.target.closest('.acc-result'); if(!r||!r.dataset.e) return; e.preventDefault(); addChip(r.dataset.e,r.dataset.n); });
+    applyBar.addEventListener('click',e=>{ if(handlePermClick(e)) markDirty(); });
+    saveBtn.addEventListener('click',()=>{
+      if(addSel.size){ const perms=readPerms(addPerms); PEOPLE.forEach(p=>{ if(addSel.has(p.e) && !exceptions.some(e=>e.email===p.e)) exceptions.push({name:p.n,email:p.e,allowed:new Set(perms)}); }); }
+      addSel.clear(); updateSummary(); closeAll();
+    });
+
+    function renderList(){
+      listEl.innerHTML=exceptions.length? exceptions.map((e,i)=>{ const s=summary(e.allowed); return `<div class="exc-item" data-i="${i}"><div class="exc-row"><button class="exc-main"><svg class="exc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg><div class="person-main"><div class="person-nm">${e.name}</div><div class="person-em">${e.email}</div></div></button><span class="exc-sum ${s[1]}">${s[0]}</span><button class="exc-x" data-rm="${i}" aria-label="Remove">${XSVG}</button></div><div class="exc-detail" hidden>${permHTML(e.allowed)}</div></div>`; }).join('') : '<div class="exc-empty">No exceptions yet — everyone follows the defaults.</div>';
+    }
+    listEl.addEventListener('click',e=>{
+      const item=e.target.closest('.exc-item'); if(!item) return;
+      const i=+item.dataset.i;
+      if(e.target.closest('.exc-x')){ exceptions.splice(i,1); renderList(); updateSummary(); markDirty(); return; }
+      if(e.target.closest('.exc-detail .toggle')){
+        if(handlePermClick(e)){ exceptions[i].allowed=readPerms(item.querySelector('.exc-detail')); const s=summary(exceptions[i].allowed); const el=item.querySelector('.exc-sum'); el.textContent=s[0]; el.className='exc-sum '+s[1]; markDirty(); }
+        return;
+      }
+      if(e.target.closest('.exc-main')){ item.classList.toggle('open'); const d=item.querySelector('.exc-detail'); if(d) d.hidden=!item.classList.contains('open'); }
+    });
+
+    updateSummary();
+  })();
+</script>
+</body>
+</html>
