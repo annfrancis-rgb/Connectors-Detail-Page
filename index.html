@@ -767,13 +767,15 @@
     // Save enables only when something actually differs from the default:
     // a toggle moved for the people being added, or an existing exception edited/removed.
     let exDirty=false;
+    // The drawer edits a working copy; nothing touches the committed `exceptions` until Save.
+    let draft=[];
     const addDirty=()=>addSel.size>0 && readPerms(addPerms).size!==ALL.length;
     const refresh=()=>{ saveBtn.disabled=!(exDirty||addDirty()); };
-    function openMgr(){ addSel.clear(); exDirty=false; field.querySelectorAll('.tf-chip').forEach(c=>c.remove()); search.value=''; search.placeholder='Add people by name or email…'; results.hidden=true; applyBar.hidden=true; addPerms.innerHTML=''; saveBtn.disabled=true; renderList(); drawer.classList.add('open'); document.getElementById('scrim').classList.add('open'); }
+    function openMgr(){ addSel.clear(); exDirty=false; draft=exceptions.map(e=>({name:e.name,email:e.email,allowed:new Set(e.allowed)})); field.querySelectorAll('.tf-chip').forEach(c=>c.remove()); search.value=''; search.placeholder='Add people by name or email…'; results.hidden=true; applyBar.hidden=true; addPerms.innerHTML=''; saveBtn.disabled=true; renderList(); drawer.classList.add('open'); document.getElementById('scrim').classList.add('open'); }
     document.querySelectorAll('.manage-access').forEach(b=>b.addEventListener('click',openMgr));
 
     function renderResults(q){
-      const taken=new Set([...exceptions.map(e=>e.email), ...addSel]);
+      const taken=new Set([...draft.map(e=>e.email), ...addSel]);
       const list=PEOPLE.filter(p=>!taken.has(p.e) && (!q||(p.n+' '+p.e).toLowerCase().includes(q.toLowerCase())));
       results.innerHTML=list.length? list.map(p=>`<div class="acc-result" data-e="${p.e}" data-n="${p.n}"><div class="person-main"><div class="person-nm">${p.n}</div><div class="person-em">${p.e}</div></div></div>`).join('') : '<div class="acc-result" style="cursor:default;color:var(--aira-text-tertiary)">No people match.</div>';
       results.hidden=false;
@@ -802,19 +804,20 @@
     results.addEventListener('mousedown',e=>{ const r=e.target.closest('.acc-result'); if(!r||!r.dataset.e) return; e.preventDefault(); addChip(r.dataset.e,r.dataset.n); });
     applyBar.addEventListener('click',e=>{ if(handlePermClick(e)) refresh(); });
     saveBtn.addEventListener('click',()=>{
-      if(addSel.size){ const perms=readPerms(addPerms); PEOPLE.forEach(p=>{ if(addSel.has(p.e) && !exceptions.some(e=>e.email===p.e)) exceptions.push({name:p.n,email:p.e,allowed:new Set(perms)}); }); }
+      if(addSel.size){ const perms=readPerms(addPerms); PEOPLE.forEach(p=>{ if(addSel.has(p.e) && !draft.some(e=>e.email===p.e)) draft.push({name:p.n,email:p.e,allowed:new Set(perms)}); }); }
+      exceptions.length=0; draft.forEach(e=>exceptions.push(e)); // commit the working copy
       addSel.clear(); updateSummary(); closeAll();
     });
 
     function renderList(){
-      listEl.innerHTML=exceptions.length? exceptions.map((e,i)=>{ const s=summary(e.allowed); return `<div class="exc-item" data-i="${i}"><div class="exc-row"><button class="exc-main"><svg class="exc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg><div class="person-main"><div class="person-nm">${e.name}</div><div class="person-em">${e.email}</div></div></button><span class="exc-sum ${s[1]}">${s[0]}</span><button class="exc-x" data-rm="${i}" aria-label="Remove">${XSVG}</button></div><div class="exc-detail" hidden>${permHTML(e.allowed)}</div></div>`; }).join('') : '<div class="exc-empty">No exceptions yet — everyone follows the defaults.</div>';
+      listEl.innerHTML=draft.length? draft.map((e,i)=>{ const s=summary(e.allowed); return `<div class="exc-item" data-i="${i}"><div class="exc-row"><button class="exc-main"><svg class="exc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg><div class="person-main"><div class="person-nm">${e.name}</div><div class="person-em">${e.email}</div></div></button><span class="exc-sum ${s[1]}">${s[0]}</span><button class="exc-x" data-rm="${i}" aria-label="Remove">${XSVG}</button></div><div class="exc-detail" hidden>${permHTML(e.allowed)}</div></div>`; }).join('') : '<div class="exc-empty">No exceptions yet — everyone follows the defaults.</div>';
     }
     listEl.addEventListener('click',e=>{
       const item=e.target.closest('.exc-item'); if(!item) return;
       const i=+item.dataset.i;
-      if(e.target.closest('.exc-x')){ exceptions.splice(i,1); renderList(); updateSummary(); exDirty=true; refresh(); return; }
+      if(e.target.closest('.exc-x')){ draft.splice(i,1); renderList(); exDirty=true; refresh(); return; }
       if(e.target.closest('.exc-detail .toggle')){
-        if(handlePermClick(e)){ exceptions[i].allowed=readPerms(item.querySelector('.exc-detail')); const s=summary(exceptions[i].allowed); const el=item.querySelector('.exc-sum'); el.textContent=s[0]; el.className='exc-sum '+s[1]; exDirty=true; refresh(); }
+        if(handlePermClick(e)){ draft[i].allowed=readPerms(item.querySelector('.exc-detail')); const s=summary(draft[i].allowed); const el=item.querySelector('.exc-sum'); el.textContent=s[0]; el.className='exc-sum '+s[1]; exDirty=true; refresh(); }
         return;
       }
       if(e.target.closest('.exc-main')){ item.classList.toggle('open'); const d=item.querySelector('.exc-detail'); if(d) d.hidden=!item.classList.contains('open'); }
